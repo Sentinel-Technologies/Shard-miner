@@ -36,7 +36,7 @@ def Get_address():
         minerAddr = data["address"]
 
     while not address_valid:
-            minerAddr = input("Enter your Sirious address: ")
+            minerAddr = input("Enter your MadzCoin address: ")
             try:
                 address_valid = w3.isAddress(minerAddr)
             except:
@@ -64,7 +64,7 @@ class SignatureManager(object):
             self.signed += 1
         return transaction
 
-class SiriCoinMiner(object):
+class MadzCoinMiner(object):
     def __init__(self, NodeAddr, RewardsRecipient):
         self.node = NodeAddr
         self.signer = SignatureManager()
@@ -72,7 +72,7 @@ class SiriCoinMiner(object):
         self.target = "0x" + "f"*64
         self.lastBlock = ""
         self.rewardsRecipient = w3.toChecksumAddress(RewardsRecipient)
-        self.priv_key = w3.solidityKeccak(["string", "address"], ["Sirious is wayyy better than Siricoin, change my mind :) - Just a disposable key", self.rewardsRecipient])
+        self.priv_key = w3.solidityKeccak(["string", "address"], ["MadzCoin for the win!!! - Just a disposable key", self.rewardsRecipient])
 
         self.nonce = 0
         self.acct = w3.eth.account.from_key(self.priv_key)
@@ -99,7 +99,7 @@ class SiriCoinMiner(object):
         try:
             txid = requests.get(f"{self.node}/send/rawtransaction/?tx={json.dumps(tx).encode().hex()}").json().get("result")[0]
             rgbPrint(f"Mined block {blockData['miningData']['proof']},\nsubmitted in transaction {txid}", "green")
-            rgbPrint("Current Network Balance: " + str(requests.get(f"{self.node}/accounts/accountBalance/{self.rewardsRecipient}").json()["result"]["balance"]) + " Siro", "green") # code by luketherock868
+            rgbPrint("Current Network Balance: " + str(requests.get(f"{self.node}/accounts/accountBalance/{self.rewardsRecipient}").json()["result"]["balance"]) + " MADZ", "green") # code by luketherock868
             miner.startMining()
         except:
             pass
@@ -132,7 +132,7 @@ class SiriCoinMiner(object):
         global RpcEnabled, first_run, bRoot
         if RpcEnabled:
             try:
-                rpc = pypresence.Presence("998176088297570324")
+                rpc = pypresence.Presence("1061719628839137350")
                 rpc.connect()
             except:
                 RpcEnabled = False
@@ -171,7 +171,7 @@ class SiriCoinMiner(object):
             rgbPrint("Last " + str(hashrate_refreshRate) + "s hashrate: " + self.formatHashrate((self.nonce / (time.perf_counter() - timestamp))), "yellow")
             if RpcEnabled:
                 try:
-                    rpc.update(state="Mining MADZ on " + cpuinfo.get_cpu_info()['brand_raw'] + "!", details="Hashrate: " + self.formatHashrate((self.nonce / (time.perf_counter() - timestamp))) + ", Network balance: " + str(requests.get(f"{self.node}/accounts/accountBalance/{self.rewardsRecipient}").json()["result"]["balance"]) + " Siro", large_image="sirious")
+                    rpc.update(state="Mining MADZ on " + cpuinfo.get_cpu_info()['brand_raw'] + "!", details="Hashrate: " + self.formatHashrate((self.nonce / (time.perf_counter() - timestamp))) + ", Network balance: " + str(requests.get(f"{self.node}/accounts/accountBalance/{self.rewardsRecipient}").json()["result"]["balance"]) + " MADZ", large_image="madzcoin")
                 except:
                     RpcEnabled = False
 
@@ -182,7 +182,6 @@ if __name__ == "__main__":
     
     Get_address()
     the_node = "Mainnet"
-    miner = SiriCoinMiner(MainNET, minerAddr)
-    Continue_To_Junaid_net = False
+    miner = MadzCoinMiner(MainNET, minerAddr)
     miner.startMining()
         
