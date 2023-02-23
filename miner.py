@@ -10,15 +10,17 @@ from eth_account.messages import encode_defunct
 from web3.auto import w3
 from rich import print
 
-
-MainNET = "http://madzcoin-58263.portmap.io:58263"
+MainNET = "http://92.5.61.67:6969"
 
 configFile = "config.json"
 TimeOUT = 1
-RpcEnabled = True
+RpcEnabled = False
 hashes_per_list = 3000
-hashrate_refreshRate = 30 # s
+hashrate_refreshRate = 5 # s
 
+time.sleep(0.75)
+os.system("cls")
+time.sleep(0.75)
 
 def hash():
     pass
@@ -184,4 +186,3 @@ if __name__ == "__main__":
     the_node = "Mainnet"
     miner = MadzCoinMiner(MainNET, minerAddr)
     miner.startMining()
-        
