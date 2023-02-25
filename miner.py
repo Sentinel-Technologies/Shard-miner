@@ -1,6 +1,6 @@
 ######################################
 
-# Thanks to Sirious coin for the source code 
+# Thanks to Sirious coin for the source code
 # checkout their project at https://github.com/Sirious-io
 
 ######################################
@@ -10,13 +10,27 @@ from eth_account.messages import encode_defunct
 from web3.auto import w3
 from rich import print
 
-MainNET = "http://92.5.61.67:6969"
+
+def pick_node(nodes):
+    latency = {}
+
+    for node in nodes:
+        if node[-1] == "/": node = node[1:-1] #Remove / @ the end if it exists
+        try:
+            if requests.get(node + "/ping").json()["success"]:
+                latency[node] = requests.get(node + "/ping").elapsed.microseconds
+        except:
+            pass
+
+    return min(latency, key=latency.get)
 
 configFile = "config.json"
 TimeOUT = 1
 RpcEnabled = False
 hashes_per_list = 3000
 hashrate_refreshRate = 5 # s
+nodes = ["http://92.5.61.67:6969", "https://78.58.45.205:5000"]
+MainNET = pick_node(nodes)
 
 time.sleep(0.75)
 os.system("cls")
@@ -48,13 +62,13 @@ def Get_address():
             else:
                 with open(configFile, 'w') as outfile:
                     json.dump({"address": minerAddr}, outfile)
-    
+
 
 class SignatureManager(object):
     def __init__(self):
         self.verified = 0
         self.signed = 0
-    
+
     def signTransaction(self, private_key, transaction):
         message = encode_defunct(text=transaction["data"])
         transaction["hash"] = w3.soliditySha3(["string"], [transaction["data"]]).hex()
@@ -79,12 +93,12 @@ class MadzCoinMiner(object):
         self.nonce = 0
         self.acct = w3.eth.account.from_key(self.priv_key)
         self.messages = b"null"
-        
+
         self.timestamp = time.time()
         _txs = requests.get(f"{self.node}/accounts/accountInfo/{self.acct.address}").json().get("result").get("transactions")
         self.lastSentTx = _txs[len(_txs)-1]
         self.refresh()
-    
+
     def refresh(self):
         info = requests.get(f"{self.node}/chain/miningInfo").json().get("result")
         self.target = info["target"]
@@ -94,7 +108,7 @@ class MadzCoinMiner(object):
         self.lastSentTx = _txs[len(_txs)-1]
         self.timestamp = time.time()
         self.nonce = 0
-    
+
     def submitBlock(self, blockData):
         tx = self.signer.signTransaction(self.priv_key, {"data": json.dumps({"from": self.acct.address, "to": self.acct.address, "tokens": 0, "parent": self.lastSentTx, "blockData": blockData, "epoch": self.lastBlock, "type": 1})})
         self.refresh()
@@ -105,7 +119,7 @@ class MadzCoinMiner(object):
             miner.startMining()
         except:
             pass
-            
+
     def beaconRoot(self):
         messagesHash = sha3.keccak_256(self.messages).digest()
         bRoot = "0x" + sha3.keccak_256((b"".join([bytes.fromhex(self.lastBlock.replace("0x", "")), int(self.timestamp).to_bytes(32, 'big'), messagesHash, bytes.fromhex(self.rewardsRecipient.replace("0x", "")) ]))).hexdigest() # parent PoW hash (bytes32), beacon's timestamp (uint256), hash of messages (bytes32), beacon miner (address)
@@ -114,22 +128,22 @@ class MadzCoinMiner(object):
     def formatHashrate(self, hashrate):
         if hashrate < 1000:
             # H's
-            if len(str(round(hashrate, 2)).split('.', 1)[1]) == 1: return str(round(hashrate, 2)) + "0 H/s" 
+            if len(str(round(hashrate, 2)).split('.', 1)[1]) == 1: return str(round(hashrate, 2)) + "0 H/s"
             else: return str(round(hashrate, 2)) + " H/s"
         elif hashrate < 1000000:
             # KH's
-            if len(str(round(hashrate/1000, 2)).split('.', 1)[1]) == 1: return str(round(hashrate/1000, 2)) + "0 KH/s" 
+            if len(str(round(hashrate/1000, 2)).split('.', 1)[1]) == 1: return str(round(hashrate/1000, 2)) + "0 KH/s"
             else: return str(round(hashrate/1000, 2)) + " KH/s"
         elif hashrate < 1000000000:
             # MH's
-            if len(str(round(hashrate/1000000, 2)).split('.', 1)[1]) == 1: return str(round(hashrate/1000000, 2)) + "0 MH/s" 
+            if len(str(round(hashrate/1000000, 2)).split('.', 1)[1]) == 1: return str(round(hashrate/1000000, 2)) + "0 MH/s"
             else: return str(round(hashrate/1000000, 2)) + " MH/s"
         elif hashrate < 1000000000000:
             # GH's
-            if len(str(round(hashrate/1000000000, 2)).split('.', 1)[1]) == 1: return str(round(hashrate/10000000, 2)) + "0 GH/s" 
+            if len(str(round(hashrate/1000000000, 2)).split('.', 1)[1]) == 1: return str(round(hashrate/10000000, 2)) + "0 GH/s"
             else: return str(round(hashrate/10000000, 2)) + " GH/s"
-        
-                
+
+
     def startMining(self):
         global RpcEnabled, first_run, bRoot
         if RpcEnabled:
@@ -140,10 +154,8 @@ class MadzCoinMiner(object):
                 RpcEnabled = False
 
         self.refresh()
-        if first_run: rgbPrint(f"Started mining for {self.rewardsRecipient} on {the_node}", "yellow")
+        if first_run: rgbPrint(f"SYS: Mining Madz for {self.rewardsRecipient} on {MainNET}", "green")
         hashes = []
-
-        
 
         while True:
             self.refresh()
@@ -155,22 +167,22 @@ class MadzCoinMiner(object):
             timestamp = time.perf_counter()
             while (time.perf_counter() - timestamp) < hashrate_refreshRate:
                 for i in range (hashes_per_list):
-                    
+
                     finalHash = bRoot_hasher.copy()
                     finalHash.update(self.nonce.to_bytes(32, "big"))
                     hashes.append(groestlcoin_hash.getHash(b"".join([finalHash.digest(), self.nonce.to_bytes(32, "big")]), 64))
                     self.nonce +=1
-                    
+
 
                 for hash in hashes:
                     if int(int.from_bytes(hash, "big")) < int(self.target, 16):
                         validNonce = (self.nonce - (len(hashes) - hashes.index(hash)))
-                        rawTX = ({"miningData" : {"miner": self.rewardsRecipient, "nonce": validNonce, "difficulty": self.difficulty, "miningTarget": self.target, "proof": "0x" + hash.hex()}, "parent": self.lastBlock, "messages": self.messages.hex(), "timestamp": int(self.timestamp), "son": "0"*64})           
+                        rawTX = ({"miningData" : {"miner": self.rewardsRecipient, "nonce": validNonce, "difficulty": self.difficulty, "miningTarget": self.target, "proof": "0x" + hash.hex()}, "parent": self.lastBlock, "messages": self.messages.hex(), "timestamp": int(self.timestamp), "son": "0"*64})
                         self.submitBlock(rawTX)
 
                 hashes.clear()
-            
-            rgbPrint("Last " + str(hashrate_refreshRate) + "s hashrate: " + self.formatHashrate((self.nonce / (time.perf_counter() - timestamp))), "yellow")
+
+            rgbPrint("CPU: Last " + str(hashrate_refreshRate) + "s hashrate: " + self.formatHashrate((self.nonce / (time.perf_counter() - timestamp))), "yellow")
             if RpcEnabled:
                 try:
                     rpc.update(state="Mining MADZ on " + cpuinfo.get_cpu_info()['brand_raw'] + "!", details="Hashrate: " + self.formatHashrate((self.nonce / (time.perf_counter() - timestamp))) + ", Network balance: " + str(requests.get(f"{self.node}/accounts/accountBalance/{self.rewardsRecipient}").json()["result"]["balance"]) + " MADZ", large_image="madzcoin")
@@ -181,8 +193,7 @@ class MadzCoinMiner(object):
 if __name__ == "__main__":
     first_run = True
     address_valid = False
-    
+
     Get_address()
-    the_node = "Mainnet"
     miner = MadzCoinMiner(MainNET, minerAddr)
     miner.startMining()
