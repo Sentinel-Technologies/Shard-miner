@@ -5,7 +5,7 @@
 
 ######################################
 
-import time, json, sha3, os, requests, cpuinfo, pypresence, groestlcoin_hash, skein
+import time, json, sha3, os, requests, cpuinfo, pypresence, groestlcoin_hash, skein, threading
 from eth_account.messages import encode_defunct
 from web3.auto import w3
 from rich import print
@@ -29,7 +29,8 @@ TimeOUT = 1
 RpcEnabled = False
 hashes_per_list = 3000
 hashrate_refreshRate = 5 # s
-nodes = ["http://92.5.61.67:6969", "https://78.58.45.205:5000"]
+nodes = requests.get("https://raw.githubusercontent.com/MadzCoin/Node-Bootstrap/main/nodeips.json").json()["Nodeip"]
+#print(nodes)
 MainNET = pick_node(nodes)
 
 time.sleep(0.75)
