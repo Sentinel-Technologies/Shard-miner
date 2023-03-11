@@ -5,10 +5,10 @@
 
 ######################################
 
-import time, json, sha3, os, requests, cpuinfo, pypresence, groestlcoin_hash, skein, threading
-from eth_account.messages import encode_defunct
-from web3.auto import w3
 from rich import print
+from web3.auto import w3
+from eth_account.messages import encode_defunct
+import time, json, sha3, os, requests, cpuinfo, pypresence, groestlcoin_hash, skein, threading
 
 
 def pick_node(nodes):
@@ -183,10 +183,11 @@ class MadzCoinMiner(object):
 
                 hashes.clear()
 
-            rgbPrint("CPU: Last " + str(hashrate_refreshRate) + "s hashrate: " + self.formatHashrate((self.nonce / (time.perf_counter() - timestamp))), "yellow")
+            rgbPrint(f"CPU: Last {hashrate_refreshRate}s hashrate: {self.formatHashrate((self.nonce / (time.perf_counter() - timestamp)))}", "yellow")
             if RpcEnabled:
                 try:
-                    rpc.update(state="Mining MADZ on " + cpuinfo.get_cpu_info()['brand_raw'] + "!", details="Hashrate: " + self.formatHashrate((self.nonce / (time.perf_counter() - timestamp))) + ", Network balance: " + str(requests.get(f"{self.node}/accounts/accountBalance/{self.rewardsRecipient}").json()["result"]["balance"]) + " MADZ", large_image="madzcoin")
+                    rpc_balance = requests.get(f"{self.node}/accounts/accountBalance/{self.rewardsRecipient}").json()['result']['balance']
+                    rpc.update(state=f"Mining MADZ on {cpuinfo.get_cpu_info()['brand_raw']}!", details=f"Hashrate: {self.formatHashrate((self.nonce / (time.perf_counter() - timestamp)))}, Network balance: {rpc_balance} MADZ", large_image="madzcoin")
                 except:
                     RpcEnabled = False
 
