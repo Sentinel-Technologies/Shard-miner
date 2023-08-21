@@ -29,7 +29,7 @@ TimeOUT = 1
 RpcEnabled = False
 hashes_per_list = 3000
 hashrate_refreshRate = 5 # s
-nodes = requests.get("https://raw.githubusercontent.com/MadzCoin/Node-Bootstrap/main/nodeips.json").json()["Nodeip"]
+nodes = ["http://shard-node.duckdns.org:6969"]
 #print(nodes)
 MainNET = pick_node(nodes)
 
@@ -53,7 +53,7 @@ def Get_address():
         minerAddr = data["address"]
 
     while not address_valid:
-            minerAddr = input("Enter your MadzCoin address: ")
+            minerAddr = input("Enter your Shard address (create one on metamask): ")
             try:
                 address_valid = w3.isAddress(minerAddr)
             except:
@@ -81,7 +81,7 @@ class SignatureManager(object):
             self.signed += 1
         return transaction
 
-class MadzCoinMiner(object):
+class ShardMiner(object):
     def __init__(self, NodeAddr, RewardsRecipient):
         self.node = NodeAddr
         self.signer = SignatureManager()
@@ -89,7 +89,7 @@ class MadzCoinMiner(object):
         self.target = "0x" + "f"*64
         self.lastBlock = ""
         self.rewardsRecipient = w3.toChecksumAddress(RewardsRecipient)
-        self.priv_key = w3.solidityKeccak(["string", "address"], ["MadzCoin for the win!!! - Just a disposable key", self.rewardsRecipient])
+        self.priv_key = w3.solidityKeccak(["string", "address"], ["Shard for the win!!! - Just a disposable key", self.rewardsRecipient])
 
         self.nonce = 0
         self.acct = w3.eth.account.from_key(self.priv_key)
@@ -115,8 +115,8 @@ class MadzCoinMiner(object):
         self.refresh()
         try:
             txid = requests.get(f"{self.node}/send/rawtransaction/?tx={json.dumps(tx).encode().hex()}").json().get("result")[0]
-            rgbPrint(f"Mined block {blockData['miningData']['proof']},\nsubmitted in transaction {txid}", "green")
-            rgbPrint("Current Network Balance: " + str(requests.get(f"{self.node}/accounts/accountBalance/{self.rewardsRecipient}").json()["result"]["balance"]) + " MADZ", "green") # code by luketherock868
+            rgbPrint(f"[NETWORK]: Mined block {blockData['miningData']['proof']},\nsubmitted in transaction {txid}", "green")
+            rgbPrint("[NETWORK]: Current Balance: " + str(requests.get(f"{self.node}/accounts/accountBalance/{self.rewardsRecipient}").json()["result"]["balance"]) + " MADZ", "green") # code by luketherock868
             miner.startMining()
         except:
             pass
@@ -155,7 +155,7 @@ class MadzCoinMiner(object):
                 RpcEnabled = False
 
         self.refresh()
-        if first_run: rgbPrint(f"SYS: Mining Madz for {self.rewardsRecipient} on {MainNET}", "green")
+        if first_run: rgbPrint(f"[SYS]: Mining Shard for {self.rewardsRecipient} on {MainNET}", "green")
         hashes = []
 
         while True:
@@ -183,7 +183,7 @@ class MadzCoinMiner(object):
 
                 hashes.clear()
 
-            rgbPrint(f"CPU: Last {hashrate_refreshRate}s hashrate: {self.formatHashrate((self.nonce / (time.perf_counter() - timestamp)))}", "yellow")
+            rgbPrint(f"[CPU]: Last {hashrate_refreshRate}s hashrate: {self.formatHashrate((self.nonce / (time.perf_counter() - timestamp)))}", "yellow")
             if RpcEnabled:
                 try:
                     rpc_balance = requests.get(f"{self.node}/accounts/accountBalance/{self.rewardsRecipient}").json()['result']['balance']
@@ -197,5 +197,5 @@ if __name__ == "__main__":
     address_valid = False
 
     Get_address()
-    miner = MadzCoinMiner(MainNET, minerAddr)
+    miner = ShardMiner(MainNET, minerAddr)
     miner.startMining()
